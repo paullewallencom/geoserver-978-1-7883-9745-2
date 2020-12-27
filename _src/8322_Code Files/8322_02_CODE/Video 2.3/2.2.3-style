@@ -1,0 +1,44 @@
+*{
+  mark-size: 6px;
+  halo-radius: 1;
+  halo-color: #ffffff; 
+}
+
+
+/* @title Other */
+[info_Type <> 'Apple'][info_Type <> 'Plum'][info_Type <> 'Black Walnut']{
+  	label: [name];
+    label-anchor: 0 0.5;
+    label-offset: 5 0;
+    font-size: 14;
+    font-fill: black;
+    font-family: Arial;
+    mark: symbol(circle);
+  	:symbol{
+      fill: #FF33CC
+    }
+}
+
+/* @title Apple */
+    [info_Type = 'Apple']{
+      mark: symbol(triangle);
+      :mark {
+        fill: #FF0000;
+      }
+    } 
+
+	/* @title Plum */  
+    [info_Type = 'Plum']{
+      mark: symbol(triangle);
+      :mark {
+        fill: #9933CC;
+      }
+    } 
+
+	/* @title Black Walnut */  
+    [info_Type = 'Black Walnut']{
+      mark: symbol(triangle);
+      :mark {
+        fill: #660000;
+      }
+    }

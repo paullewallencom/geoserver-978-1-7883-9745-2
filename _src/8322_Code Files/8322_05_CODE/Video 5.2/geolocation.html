@@ -1,0 +1,90 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Geolocation</title>
+    <!-- The line below is only needed for old environments like Internet Explorer and Android 4.x -->
+    <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL"></script>
+
+    <!-- OL Dependencies -->
+    <link rel="stylesheet" href="https://openlayers.org/en/v4.4.2/css/ol.css" type="text/css">
+    <script src="https://openlayers.org/en/v4.4.2/build/ol-debug.js"></script>
+  </head>
+  <body>
+    <div id="map" class="map"></div>
+    <div id="info" style="display: none;"></div>
+    <label for="track">
+      track position
+      <input id="track" onclick="track(this)" type="checkbox"/>
+    </label>
+    <script>
+      var view = new ol.View({
+        center: [0, 0],
+        zoom: 2,
+        projection: new ol.proj.Projection({
+            code: 'EPSG:4326',
+            units: 'degrees',
+            axisOrientation: 'neu',
+            global: true
+        })
+      });
+
+      var map = new ol.Map({
+        controls: ol.control.defaults().extend([
+          new ol.control.FullScreen()
+        ]),
+        layers: [
+          new ol.layer.Tile({
+            source: new ol.source.OSM()
+          })
+        ],
+        target: 'map',
+        view: view
+      });
+
+      var geolocation = new ol.Geolocation({
+        projection: view.getProjection()
+      });
+      
+      function track(that){
+        if(that.checked == true){
+            geolocation.setTracking(true);
+        } else {
+            geolocation.setTracking(false);
+        }
+      }
+
+      var positionFeature = new ol.Feature();
+      positionFeature.setStyle(new ol.style.Style({
+        image: new ol.style.Circle({
+          radius: 6,
+          fill: new ol.style.Fill({
+            color: '#3399CC'
+          }),
+          stroke: new ol.style.Stroke({
+            color: '#fff',
+            width: 2
+          })
+        })
+      }));
+
+      geolocation.on('change:position', function() {
+        var coordinates = geolocation.getPosition();
+        //coordinates = [-77.163785, 39.7641];
+        view.animate(
+                {center: coordinates},
+                {zoom: 16}
+            );
+        positionFeature.setGeometry(coordinates ?
+          new ol.geom.Point(coordinates) : null);
+      });
+        
+      new ol.layer.Vector({
+        map: map,
+        source: new ol.source.Vector({
+          features: [positionFeature]
+        })
+      });
+
+    </script>
+  </body>
+</html>

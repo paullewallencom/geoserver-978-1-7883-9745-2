@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>Responsive WFS-T Example</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- OL stylesheet -->
+    <link rel="stylesheet" href="https://openlayers.org/en/v4.4.2/css/ol.css" type="text/css">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous"> 
+    <style type="text/css">
+        #button-row{padding-top: 10px; padding-bottom: 10px};
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <div class="col">
+            <h5>Responsive WFS-T Example</h5>
+        </div>
+      </div>
+      <div class="row">
+        <div id="map" class="col-12 col-lg-9">
+        </div>
+        <div id="info-container" class="col-lg-3">
+            <div id="button-row" class="row">
+                <div class="col">
+                    <button id="zoom" type="button" class="btn btn-primary">Zoom to my location</button>
+                </div>       
+            </div>
+            <div class="row">
+                <div class="col" id="info">
+                </div>
+            </div>
+        </div>
+      </div>
+    </div>
+
+    
+    <!-- Javascript Dependencies -->
+    <script src="https://openlayers.org/en/v4.4.2/build/ol-debug.js"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
+    
+      <!-- JS for responsive wfs-t -->
+      <script type="text/javascript">
+          <!-- Constants and globals -->
+        var workspace = 'learning-geoserver';
+        var host = 'http://localhost:8080/geoserver';
+        var layer = 'pois';
+        var idField = 'id';
+        var changes = new Object();
+        var url = host + '/' + workspace + '/ows?service=WFS&version=1.1.0&request=GetFeature&typeName=' + workspace + ':' + layer + '&outputFormat=application%2Fjson';
+
+        <!-- Normal OL Configuration with GeoJSON, OSM Tile -->
+        var vectorSource = new ol.source.Vector({
+            format: new ol.format.GeoJSON(),
+            url: url,
+            strategy: ol.loadingstrategy.bbox
+        });
+        
+      <!-- features with event listeners for location on map -->
+      var view = new ol.View({
+          center: [0, 0],
+          zoom: 2,
+        projection: new ol.proj.Projection({
+            code: 'EPSG:4326',
+            units: 'degrees',
+            axisOrientation: 'neu',
+            global: true
+        })
+        });
+      
+      var geolocation = new ol.Geolocation({
+        projection: view.getProjection()
+      });
+
+      var positionFeature = new ol.Feature();
+      positionFeature.setStyle(new ol.style.Style({
+        image: new ol.style.Circle({
+          radius: 6,
+          fill: new ol.style.Fill({
+            color: '#3399CC'
+          }),
+          stroke: new ol.style.Stroke({
+            color: '#fff',
+            width: 2
+          })
+        })
+      }));
+      
+
+
+      var map = new ol.Map({
+        controls: ol.control.defaults().extend([
+          new ol.control.FullScreen()
+        ]),
+        target: "map",
+        layers: [
+          new ol.layer.Tile({
+            source: 
+            new ol.source.OSM()
+          }),
+          new ol.layer.Vector({
+            source: vectorSource
+          })
+        ],
+        view: view
+      });
+      
+ 
+        geolocation.on('change:position',    function() {
+            var coordinates = geolocation.getPosition();
+            
+            /* ignore actual location and zoom to example */
+            coordinates = [-77.163785, 39.7641];
+            
+            view.animate(
+                {center: coordinates},
+                {zoom: 18}
+            );
+            positionFeature.setGeometry(coordinates ?
+            new ol.geom.Point(coordinates) : null);
+          }
+      );
+      
+     
+        
+      // Event handler set via JQuery
+      $("#zoom").click(function() {
+            geolocation.setTracking(true)
+        });
+        
+        new ol.layer.Vector({
+        map: map,
+        source: new ol.source.Vector({
+          features: [positionFeature]
+        })
+      });
+      
+      function changed(that) {
+    <!-- Handle changed input text, load changes object  -->
+        field = that.getAttribute('id');;
+        feature = that.getAttribute('data-feature');
+        change = {};
+
+        if (changes[feature] == undefined) {
+            changes[feature] = {};
+        }
+
+        changes[feature][field] = that.value;
+    }
+
+    map.on('singleclick', function(evt) {
+        <!-- Handle map click, create input elements -->
+        document.getElementById('info').innerHTML = "Loading... please wait...";
+
+        var view = map.getView();
+        var viewResolution = view.getResolution();
+        var source = vectorSource;
+        var response =
+            source.getClosestFeatureToCoordinate(evt.coordinate);
+        var values = response.getProperties();
+
+        txt = '<div>';
+        for (x in values) {
+            if (x != idField) {
+                txt += '<div><label for="' + x + '">' + x + ':<\/label>\n' +
+                    '<input class="form-control" onchange="changed(this)"  data-feature="' + values[idField] + '" id="' + x + '" value="' + values[x] + '"></div>';
+            }
+        }
+
+        txt += '</div><div id="button-row" class="row"><div class="col"><button id="submit" onclick="submit()" type="button" class="btn btn-primary">Submit</button></div></div>';
+        document.getElementById('info').innerHTML = txt;
+
+    });
+
+    function submit() {
+        <!-- Handle input submission, generate and send WFS-T -->
+        if (Object.keys(changes).length > 0) {
+            var postData =
+                '<wfs:Transaction service="WFS" version="1.0.0"  xmlns:ogc="http://www.opengis.net/ogc" xmlns:wfs="http://www.opengis.net/wfs"><wfs:Update typeName="' + workspace + ':' + layer + '">\n';
+
+            for (x in changes) {
+
+                change = changes[x];
+                for (y in change) {
+
+                    postData += '<wfs:Property><wfs:Name>' + y + '<\/wfs:Name><wfs:Value>' + change[y] + '<\/wfs:Value><\/wfs:Property>';
+                }
+
+                postData += '<ogc:Filter><ogc:FeatureId fid="' + layer + '.' + x + '"/><\/ogc:Filter><\/wfs:Update>';
+            }
+
+            postData += '<\/wfs:Transaction>';
+
+            url = 'http://localhost:8080/geoserver/wfs';
+            var req = new XMLHttpRequest();
+            req.open("POST", url, true);
+            req.setRequestHeader('Content-type', 'text/xml');
+            req.onreadystatechange = function() {
+                if (req.readyState != 4) return;
+                if (req.status != 200 && req.status != 304) {
+                    alert('HTTP error ' + req.status);
+                    return;
+                }
+            }
+
+            if (req.readyState == 4) return;
+            req.send(postData);
+
+        }
+    }
+ 
+    </script>
+  </body>
+</html>

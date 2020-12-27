@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Single Image WMS</title>
+    <link rel="stylesheet" href="https://openlayers.org/en/v4.3.3/css/ol.css" type="text/css">
+    <!-- The line below is only needed for old environments like Internet Explorer and Android 4.x -->
+    <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL"></script>
+    <script src="https://openlayers.org/en/v4.3.3/build/ol.js"></script>
+    <style>
+        #map {
+            width: 800px;
+            height: 480px;
+            border: 1px solid black;
+            margin-top: 1%;
+        }
+        #updateFilterButton, #resetFilterButton {
+          height: 22px;
+          width: 22px;
+          text-align: center;
+          text-decoration: none !important;
+          line-height: 22px;
+          margin: 1px;
+          font-family: 'Lucida Grande',Verdana,Geneva,Lucida,Arial,Helvetica,sans-serif;
+          font-weight: bold !important;
+          background: rgba(0,60,136,0.5);
+          color: white !important;
+          padding: 2px;
+          border: 1px solid #A9A9A9;
+        }
+    </style>    
+  </head>
+  <body>
+    <div>
+              <a>Filter:</a>
+              <select id="filterType">
+                  <option value="cql">CQL</option>
+              </select>
+              <input type="text" size="80" id="filter"/>
+              <a id="updateFilterButton" href="#" onClick="updateFilter()" title="Apply filter">Apply</a>
+              <a id="resetFilterButton" href="#" onClick="resetFilter()" title="Reset filter">Reset</a>
+    </div>
+    <div id="map" class="map"></div>
+    <script>
+    var aerial = new ol.layer.Image({
+          source: new ol.source.ImageWMS({
+            url: 'http://localhost:8080/geoserver/learning-geoserver/wms',
+            params: {
+                LAYERS: 'learning-geoserver:aerialw',
+                serverType: 'geoserver'
+            }
+          })
+    });
+    var pois = new ol.layer.Image({
+            source: new ol.source.ImageWMS({
+            url: 'http://localhost:8080/geoserver/learning-geoserver/wms',
+            params: {
+                LAYERS: 'learning-geoserver:2.2.2',
+                ratio: 1,
+                VERSION: '1.1.1',
+                serverType: 'geoserver',
+                FORMAT_OPTIONS: 'layout:css-legend;fontAntiAliasing:true'
+            }
+          })
+    });
+    var projection = new ol.proj.Projection({
+          code: 'EPSG:4326',
+          units: 'degrees',
+          axisOrientation: 'neu',
+          global: true
+    });
+    var map = new ol.Map({
+        layers: [aerial,pois],
+        target: 'map',
+        view: new ol.View({
+          center: [-77.163785,39.7641],
+          extent: [-77.16694,39.76301776831773,-77.16192684279109,39.76479900000002],
+          zoom: 19,
+          projection: new ol.proj.Projection({
+          code: 'EPSG:4326',
+          units: 'degrees',
+          axisOrientation: 'neu',
+          global: true
+          })
+        })
+    });
+      
+      function updateFilter(){
+        var filter = document.getElementById('filter').value;
+        // by default, reset all filters
+        var filterParams = {
+          'CQL_FILTER': null
+        };
+        
+        filterParams["CQL_FILTER"] = filter;
+        // merge the new filter definitions
+        map.getLayers().forEach(function(lyr) {
+          if (filter.replace(/^\s\s*/, '').replace(/\s\s*$/, '') != "" && typeof lyr.getSource().updateParams === "function") { 
+                lyr.getSource().updateParams(filterParams);
+            } else if (typeof lyr.getSource().getParams === "function") {
+                params = lyr.getSource().getParams();
+                delete params.CQL_FILTER;
+                lyr.getSource().updateParams(params);
+            }
+          });
+      }
+      function resetFilter() {
+          document.getElementById('filter').value = "";
+          updateFilter();
+      }
+    </script>
+  </body>
+</html>

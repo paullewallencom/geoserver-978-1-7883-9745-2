@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Single Image WMS</title>
+    <link rel="stylesheet" href="https://openlayers.org/en/v4.3.1/css/ol.css" type="text/css">
+    <!-- The line below is only needed for old environments like Internet Explorer and Android 4.x -->
+    <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL"></script>
+    <script src="https://openlayers.org/en/v4.3.1/build/ol.js"></script>
+  </head>
+  <body>
+    <div id="map" class="map"></div>
+    <script>
+      var layers = [
+        new ol.layer.Image({
+            source: new ol.source.ImageWMS({
+              ratio: 1,
+              url: 'http://localhost:8080/geoserver/learning-geoserver/wms',
+              params: {'VERSION': '1.1.1',  
+                    STYLES: '',
+                    LAYERS: 'learning-geoserver:learning-geoserver-2.1',
+              }
+            })
+          })
+      ];
+      var map = new ol.Map({
+        layers: layers,
+        target: 'map',
+        width: '100%',
+        height: '100%',
+        
+        view: new ol.View({
+          center: [-77.163785,39.764268],
+          extent: [-77.16694,39.76301776831773,-77.16192684279109,39.76479900000002],
+          zoom: 20,
+          projection: new ol.proj.Projection({
+          code: 'EPSG:4326',
+          units: 'degrees',
+          axisOrientation: 'neu',
+          global: true
+          })
+        })
+      });
+    </script>
+  </body>
+</html>

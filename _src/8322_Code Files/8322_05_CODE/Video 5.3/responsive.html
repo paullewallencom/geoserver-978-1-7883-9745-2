@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>Simple Boostrap/JQuery OL Mobile Example</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- OL stylesheet -->
+    <link rel="stylesheet" href="https://openlayers.org/en/v4.4.2/css/ol.css" type="text/css">
+    
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous"> 
+    <style type="text/css">
+        #info-container {padding-top: 10px};
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <div class="col">
+            <h5>Simple Bootstrap/Geolocation OL Viewer</h5>
+        </div>
+      </div>
+      <div class="row">
+        <div id="map" class="col-12 col-lg-9">
+        </div>
+        <div id="info-container" class="col-lg-3">
+            <div class="row">
+                <div class="col">
+                    <button id="zoom" type="button" class="btn btn-primary">Zoom to my location</button>
+                </div>       
+            </div>
+            <div class="row">
+                <div class="col" id="info">
+                </div>
+            </div>
+        </div>
+      </div>
+    </div>
+
+    
+    <!-- Javascript Dependencies -->
+    <script src="https://openlayers.org/en/v4.4.2/build/ol-debug.js"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
+    
+    <!-- JS for simple mobile viewer -->
+    <script type="text/javascript">
+    
+      <!-- features with event listeners for location on map -->
+      var view = new ol.View({
+          center: [0, 0],
+          zoom: 2,
+        projection: new ol.proj.Projection({
+            code: 'EPSG:4326',
+            units: 'degrees',
+            axisOrientation: 'neu',
+            global: true
+        })
+        });
+      
+      var geolocation = new ol.Geolocation({
+        projection: view.getProjection()
+      });
+
+      var positionFeature = new ol.Feature();
+      positionFeature.setStyle(new ol.style.Style({
+        image: new ol.style.Circle({
+          radius: 6,
+          fill: new ol.style.Fill({
+            color: '#3399CC'
+          }),
+          stroke: new ol.style.Stroke({
+            color: '#fff',
+            width: 2
+          })
+        })
+      }));
+      
+
+
+      var map = new ol.Map({
+        target: "map",
+        controls: ol.control.defaults().extend([
+          new ol.control.FullScreen()
+        ]),
+        layers: [
+          new ol.layer.Tile({
+            source: 
+            new ol.source.OSM()
+          })
+        ],
+        view: view
+      });
+      
+ 
+        geolocation.on('change:position',    function() {
+            var coordinates = geolocation.getPosition();
+            
+            /* ignore actual location and zoom to example */
+            coordinates = [-77.163785, 39.7641];
+            
+            view.animate(
+                {center: coordinates},
+                {zoom: 16}
+            );
+            positionFeature.setGeometry(coordinates ?
+            new ol.geom.Point(coordinates) : null);
+          }
+      );
+      
+     
+        
+      // Event handler set via JQuery
+      $("#zoom").click(function() {
+            geolocation.setTracking(true)
+        });
+        
+        new ol.layer.Vector({
+        map: map,
+        source: new ol.source.Vector({
+          features: [positionFeature]
+        })
+      });
+ 
+    </script>
+  </body>
+</html>

@@ -1,0 +1,36 @@
+*{
+  mark-size: 6px;
+  halo-radius: 1;
+  halo-color: #ffffff; 
+}
+
+[info_Name <> 'Tree']{
+  	label: [name];
+    label-anchor: 0 0.5;
+    label-offset: 5 0;
+    font-size: 14;
+    font-fill: black;
+    font-family: Arial;
+    mark: symbol(circle);
+  	:symbol{
+      fill: #FF33CC
+    }
+}
+
+[info_Name = 'Tree']{
+    mark: symbol(triangle);
+}
+	/* @title Apple */
+     :symbol[info_Type LIKE '%apple%']{
+      fill: #FF0000;
+    } 
+
+	/* @title Plum */  
+     :symbol[info_Type LIKE '%plum%']{
+      fill: #9933CC;
+    } 
+
+	/* @title Walnut */  
+     :symbol[info_Type LIKE '%walnut%']{
+      fill: #660000;
+    }
